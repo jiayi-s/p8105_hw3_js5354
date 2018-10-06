@@ -1,0 +1,22 @@
+---
+title: "P8105 HW3"
+author: Jiayi Shen
+date: 10/06/2018
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Problem 1
+```{r load BRFSS data}
+# install.packages("devtools")
+devtools::install_github("p8105/p8105.datasets")
+
+#load BRFSS data
+library(p8105.datasets)
+data(brfss_smart2010, package = "p8105.datasets")
+```
+
