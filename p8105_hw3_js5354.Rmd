@@ -57,7 +57,9 @@ brfss_smart2010 %>%
 # a line plot that shows the number of obs in each state from 2002 to 2010. 
 ggplot(spaghetti_df, aes(x = year, y = n_obs, color = locationabbr))+
   geom_line()+
-  labs(y = "number of observations each year")
+  labs(x = "Year", 
+       y = "Num. of observations",
+       title = "The number of observations in each state from 2002 to 2010")
 ```
 This line plot demonstrates the number of observations each year in each state. The time frame ranges from 2002 to 2010. One line represents the trend in he number of observations in one state. Different states are colored differently.  
   
@@ -86,7 +88,9 @@ brfss_smart2010 %>%
 
 ggplot(brfss_state_avg, aes(x = year, y = avg_prop, color = locationabbr))+
   geom_line()+
-  labs(y = "average proportion of each response in each state over time") +
+  labs(x = "Year",
+       y = "average proportion of each response",
+       title = "The state-level average proportion of each response from 2002 to 2010") +
   facet_grid(. ~ response)
 ```
 
@@ -100,5 +104,41 @@ data(instacart, package = "p8105.datasets")
 ```
 This `instacart` dataset contains `r dim(instacart)[1]` observations and `r dim(instacart)[2]` variables, storing information related to orders placed on the instacart app. The dataset not only includes numeric variables, such as order ID and user ID, but also character variables like descriptive product names and department names, and a logical variable `reordered` stating whether the order was placed first time or not.  
   
-Taking `order_id` =1 placed by `user_id` = 112108 as an example, this specific order was consist of 8 items with their `product_id`, `product_name` and the order in which each item was added to the cart (`add_to_cart_order`) stated. If `reordered` =1, it means that the particular item was not the first time that customer purchased.  `order_number` states the number of its corresponding product the customer ordered. In this order, the user purchased four of everything. `order_dow` = 4 and `order_hour_of_day` =12 means this order was placed on a Thursday on 12pm. It had been 30 days (`days_since_prior_order` = 30) since this user placed his/her last order on instacart. Information related to the location of each product in the supermarket is specified in `aisle_id`, `aisle`, `department_id` and `department`.
+Taking `order_id` =1 placed by `user_id` = 112108 as an example, this specific order was consist of 8 items with their `product_id`, `product_name` and the order in which each item was added to the cart (`add_to_cart_order`) stated. If `reordered` =1, it means that the particular item was not the first time that customer purchased.  `order_number` refers to the sequence number of this order that the user placed. In this order, the user purchased four of everything. `order_dow` = 4 and `order_hour_of_day` =12 means this order was placed on a Thursday on 12pm. It had been 30 days (`days_since_prior_order` = 30) since this user placed his/her last order on instacart. Information related to the location of each product in the supermarket is specified in `aisle_id`, `aisle`, `department_id` and `department`.
+
+
+```{r distinct aisles and their frequency}
+# The number of distinct aisles
+distinct(instacart, aisle)
+
+# Frequency of each aisle
+instacart %>% 
+  group_by(aisle) %>% 
+  summarize(n = n()) %>% 
+  arrange(desc(n))
+```
+- Fresh fruits and vegetables are the two aisles from which most items are ordered. The frequency of fresh fruits/vegetables appeared in this dataset almost double the frequency of the third most popular aisle, packaged vegetables fruits. 
+
+```{r plotting n. of items in each aisle}
+# create a relevant dataframe for further plotting
+aisle_freq = 
+instacart %>% 
+  group_by(aisle) %>% 
+  summarize(n = n()) %>% 
+  arrange(desc(n))
+
+# create a function to plot aisles with item number within specific interval.
+plot_aisle = function (lower_lim, upper_lim){
+
+  ggplot(filter(aisle_freq, n >= lower_lim & n < upper_lim), aes(x = reorder(aisle, -n), y = n)) +
+  geom_bar(stat = "identity")  +
+  geom_text(aes(label = n), size =3, position = position_dodge(width = 0.9), vjust = -0.25) +
+  scale_y_continuous(name = "Number of items ordered") +
+  scale_x_discrete(name = "Asile" ) +
+  coord_cartesian(ylim = c(lower_lim*0.95, upper_lim*1.05)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+}
+
+plot_aisle (1000, 5000)
+```
 
