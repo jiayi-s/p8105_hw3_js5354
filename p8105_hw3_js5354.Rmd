@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE,
                       out.width = "90%")
 library(tidyverse)
 library(ggridges)
+library(patchwork)
 ```
 
 
@@ -132,13 +133,63 @@ plot_aisle = function (lower_lim, upper_lim){
 
   ggplot(filter(aisle_freq, n >= lower_lim & n < upper_lim), aes(x = reorder(aisle, -n), y = n)) +
   geom_bar(stat = "identity")  +
-  geom_text(aes(label = n), size =3, position = position_dodge(width = 0.9), vjust = -0.25) +
+  geom_text(aes(label = n), size =1, position = position_dodge(width = 0.9), vjust = -0.25) +
   scale_y_continuous(name = "Number of items ordered") +
   scale_x_discrete(name = "Asile" ) +
   coord_cartesian(ylim = c(lower_lim*0.95, upper_lim*1.05)) +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 }
 
-plot_aisle (1000, 5000)
+aisle_p1 = plot_aisle (0, 1000)
+aisle_p2 = plot_aisle (1000, 2000)
+aisle_p3 = plot_aisle (2000, 6000)
+aisle_p4 = plot_aisle (6000, 13000)
+aisle_p5 = plot_aisle (13000, 151000)
+
+aisle_p1  
+aisle_p2  
+aisle_p3  
+aisle_p4 
+aisle_p5 
+
 ```
+
+```{r table: the most popular item in 3 aisles}
+# make a table showing the most popular item in aisles "baking ingredients", "dog food care", "packaged vegetables fruits"
+
+instacart %>% 
+  filter(aisle %in% c("baking ingredients", "dog food care", "packaged vegetables fruits")) %>% 
+  group_by(aisle) %>% 
+  count(product_name) %>% 
+  mutate(item_ranking = min_rank(desc(n))) %>% 
+  filter(item_ranking == 1) %>% 
+  select(-item_ranking) %>% 
+  knitr::kable()
+  
+```
+
+The most popular item in aisles "baking ingredients", "dog food care", "packaged vegetables fruits" are "Light Brown Sugar", "Snack Sticks Chicken & Rice Recipe Dog Treats", and "Organic Baby Spinach" respectively. A total of 9784 portions of "Organic Baby Spinach" were purchased in this data. 
+
+
+```{r table: the mean hour of the day}
+instacart %>% 
+  filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>% 
+  group_by(order_dow) %>% 
+  summarize(mean_hof = mean(order_hour_of_day)) %>% 
+  mutate(order_dow = recode(order_dow, 
+                            "0" = "Sunday", 
+                            "1" = "Monday", 
+                            "2" = "Tuesday",
+                            "3" = "Wednesday",
+                            "4" = "Thursday",
+                            "5" = "Friday",
+                            "6" = "Saturday")) %>% 
+  mutate(mean_hof = paste(floor(mean_hof), round((mean_hof-floor(mean_hof))*60), sep=":")) %>% 
+  knitr::kable(caption = "the mean hour of the day to order Pink Lady Apples and Coffee Ice Cream")
+  
+```
+Generally, Pink Lady Apples and Coffee Ice Cream are ordered in early afternoon, in a window between 12pm to 3 pm. The difference in the hours is subtle with respect to which day of the week it is. 
+
+#Problem 3
+
 
