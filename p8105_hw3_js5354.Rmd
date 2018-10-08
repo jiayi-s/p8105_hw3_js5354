@@ -192,4 +192,103 @@ Generally, Pink Lady Apples and Coffee Ice Cream are ordered in early afternoon,
 
 #Problem 3
 
+```{r load ny_noaa data}
+data(ny_noaa, package = "p8105.datasets")
+
+```
+The `ny_noaa` dataset contains `r dim(ny_noaa)[1]` records and `r dim(ny_noaa)[2]` variables relevant to national-wise daily weather data. The records are reported from `r nrow(distinct(ny_noaa,id))` distinct stations, from `r range(ny_noaa$date)[1]` to `r range(ny_noaa$date)[2]`. Precipitation (in tenths of mm), snowfall (in mm), snow depth (in mm) and maximun / minimum temperature (in tenths of degree C) are the variables included in this dataset.   
+  
+Out of the total `r dim(ny_noaa)[1]` records, there are `r round(sum(is.na(ny_noaa$tmax)) / nrow(ny_noaa)*100)` % missing values in the variable `tmax` and `tmin`; `r round(sum(is.na(ny_noaa$snow)) / nrow(ny_noaa)*100)` in `snow`; `r round(sum(is.na(ny_noaa$snwd)) / nrow(ny_noaa)*100)` in `snwd`.   
+  
+  *The relatively large proportion of missing values may reduce the power of statistics generated based on this dataset. Limited number of observations on tmax/tmin during earlier years, due to the large quantity of their missing values, may render the available samples being less representative of the overall weather pattern. *
+  
+```{r cleaning of ny_noaa}
+#separate the date
+#include reasonable units for temp, prcp and snowfall
+ny_noaa =
+ny_noaa %>% 
+  separate(date, into = c("year", "month", "day"), sep = "-") 
+
+# change the type of tmax and tmin
+ny_noaa$tmax = as.numeric(unclass(ny_noaa$tmax))
+ny_noaa$tmin = as.numeric(unclass(ny_noaa$tmin))
+ny_noaa$year = as.numeric(unclass(ny_noaa$year))
+ny_noaa$month = as.numeric(unclass(ny_noaa$month))
+ny_noaa$day = as.numeric(unclass(ny_noaa$day))
+
+#mutate the value of varialbes so that they are in agreement with reasonable units
+ny_noaa =
+ny_noaa %>% 
+  mutate(tmax = tmax *0.1, tmin = tmin*0.1, prcp = prcp*0.1) 
+
+#get the mode of snallfall values
+getmode <- function(input) {
+   uniqv <- unique(input)
+   uniqv[which.max(tabulate(match(input, uniqv)))]
+}
+getmode(ny_noaa$snow)
+```
+
+- The most commmonly observed value of snowfall is 0 among all New York state weather stations from January 1, 1981 through December 31, 2010. The reason is probably that the snowing season in New York state only takes place for a relatively short duration of time throughout a year.
+
+```{r plotting avg temp in JAN/JUL}
+# first working on the avg temp in JAN
+avg_temp_jan = 
+ny_noaa %>% 
+  na.omit(cols= c("tmax", "tmin")) %>% 
+  filter(month == 1) %>% 
+  group_by(id, year) %>% 
+  summarize(avg_temp = 0.5*mean(tmax) + 0.5*mean(tmin)) 
+
+p_JAN = 
+ggplot (avg_temp_jan, aes(x = year, y = avg_temp, color = id)) +
+  geom_line() +
+  labs (title = "Average Temperature (degrees C) in January each year of each station, 1980-2010",
+        x = "Year",
+        y = "Temperature (degrees C)") +
+  theme(legend.position="none")
+
+# then working on the avg temp in JUL
+avg_temp_jul = 
+ny_noaa %>% 
+  na.omit(cols= c("tmax", "tmin")) %>% 
+  filter(month == 7) %>% 
+  group_by(id, year) %>% 
+  summarize(avg_temp = 0.5*mean(tmax) + 0.5*mean(tmin)) 
+
+p_JUL = 
+ggplot (avg_temp_jul, aes(x = year, y = avg_temp, color = id)) +
+  geom_line() +
+  labs (title = "Average Temperature (degrees C) in July each year of each station, 1980-2010",
+        x = "Year",
+        y = "Temperature (degrees C)") +
+  theme(legend.position="none")
+
+p_JAN / p_JUL
+
+# Finding out the outliers
+filter (avg_temp_jan, avg_temp == min(avg_temp_jan$avg_temp))
+filter (avg_temp_jul, avg_temp == min(avg_temp_jul$avg_temp))
+```
+
+In general, the average temperature in January/July in each station of NY state follows relatively similar pattern across 1980 to 2010. However, there are two noticable outliers: the average temperature of -20.2 degrees C in January 1996 and the one of 14.0 degrees C in July 2007. 
+
+```{r plotting tmax vs tmin}
+ny_noaa %>% 
+  na.omit(cols= c("tmax", "tmin")) %>% 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_bin2d()
+```
+
+```{r distribution of snowfall values}
+ny_noaa  %>% 
+  na.omit(cols = "snow") %>% 
+  filter(snow > 0 & snow <100) %>% 
+  ggplot(aes(x = as.character(year), y = snow)) +
+  geom_boxplot() +
+  labs (title = "Snowfall distribution in NY state from 1980 to 2010",
+        x = "Year",
+        y = "Snowfall (mm)") +
+  theme(axis.text.x = element_text(angle = 80, hjust = 1))
+```
 
