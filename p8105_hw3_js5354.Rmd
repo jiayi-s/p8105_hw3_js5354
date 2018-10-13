@@ -5,19 +5,18 @@ date: 10/06/2018
 output: github_document
 ---
 
-```{r setup, include=FALSE}
+```{r setup, include = FALSE}
 knitr::opts_chunk$set(echo = TRUE, 
-                      fig.width = 6,
-                      fig.asp = .6,
-                      out.width = "90%")
+                      dpi = 300)
 library(tidyverse)
 library(ggridges)
 library(patchwork)
+library(grid)
 ```
 
 
 # Problem 1
-```{r load BRFSS data}
+```{r load BRFSS data, include = FALSE}
 # install.packages("devtools")
 devtools::install_github("p8105/p8105.datasets")
 
@@ -43,26 +42,32 @@ brfss_smart2010 %>%
   distinct(locationabbr, locationdesc) %>% 
   count(locationabbr) %>% 
   filter(n == 7)
-# CT, FL and NC were 7 distinct "locationdesc" variables.
 ```
 
-- In 2002, CT, FL and NC were observed at 7 locations.  
+  In 2002, CT, FL and NC were observed at 7 locations.  
   
-```{r spaghetti plot}
+```{r spaghetti plot, fig.width = 6, fig.height = 8}
 # create a relevant dataframe for spaghetti plot
 spaghetti_df = 
 brfss_smart2010 %>% 
-  group_by(locationabbr, year) %>% 
-  summarize(n_obs = sum(sample_size))
+  group_by(locationabbr, year) %>%
+  distinct(locationdesc) %>% 
+  count(locationabbr)
 
 # a line plot that shows the number of obs in each state from 2002 to 2010. 
-ggplot(spaghetti_df, aes(x = year, y = n_obs, color = locationabbr))+
-  geom_line()+
+ggplot(spaghetti_df, aes(x = year, y = n, color = locationabbr)) +
+  geom_line() +
+  geom_point() +
   labs(x = "Year", 
-       y = "Num. of observations",
-       title = "The number of observations in each state from 2002 to 2010")
+       y = "Num. of locations",
+       title = "The number of locations in each state\nfrom 2002 to 2010") +
+   theme(legend.position = "bottom", 
+         legend.text = element_text(size = 9),
+         axis.title=element_text(size = 9,face = "bold")) +
+  guides(colour = guide_legend(nrow = 7))
 ```
-This line plot demonstrates the number of observations each year in each state. The time frame ranges from 2002 to 2010. One line represents the trend in he number of observations in one state. Different states are colored differently.  
+    
+  This line plot demonstrates the number of observations each year in each state. The time frame ranges from 2002 to 2010. One line represents the trend in he number of observations in one state. Different states are colored differently.  
   
 ```{r table of excellent proportion in NY}
 
@@ -77,11 +82,11 @@ brfss_smart2010 %>%
 
 ```
 
-From 2002 to 2006, the average proportion of excellent response in all locations across NY dropped from 24.0% to 22.5%. And from 2006 to 2010, this proportion stayed relatively flat, around 22.5%. The variance between each location across the NY state decreased from 2002 to 2006 and then to 2010.  
+  From 2002 to 2006, the average proportion of excellent response in all locations across NY dropped from 24.0% to 22.5%. And from 2006 to 2010, this proportion stayed relatively flat, around 22.5%. The variance between each location across the NY state decreased from 2002 to 2006 and then to 2010.  
   
   
 
-```{r state level average of each response}
+```{r state level average of each response, fig.width = 6, fig.height = 8}
 brfss_state_avg = 
 brfss_smart2010 %>% 
   group_by(year, locationabbr, response) %>% 
@@ -90,22 +95,28 @@ brfss_smart2010 %>%
 ggplot(brfss_state_avg, aes(x = year, y = avg_prop, color = locationabbr))+
   geom_line()+
   labs(x = "Year",
-       y = "average proportion of each response",
-       title = "The state-level average proportion of each response from 2002 to 2010") +
-  facet_grid(. ~ response)
+       y = "Average percentage of each response",
+       title = "The state-level average percentage \nof each response from 2002 to 2010") +
+  facet_grid(. ~ response) +
+  theme(legend.position = "bottom", 
+        legend.text = element_text(size = 9),
+        axis.title = element_text(size = 10,face = "bold"),
+        axis.text.x = element_text(angle = 45, hjust = 1)) +
+  guides(colour = guide_legend(nrow = 7))
 ```
 
- *commenting*\
-In general, the average proportion of responding either "excellent" or "very good" or "good" is greater than those of responding "fair" or "poor".   
+
+  In general, the average proportion of responding either "excellent" or "very good" or "good" is greater than those of responding "fair" or "poor".   
   
 
 #Problem 2
-```{r load instacart data}
+```{r load instacart data, include = FALSE}
 data(instacart, package = "p8105.datasets")
 ```
-This `instacart` dataset contains `r dim(instacart)[1]` observations and `r dim(instacart)[2]` variables, storing information related to orders placed on the instacart app. The dataset not only includes numeric variables, such as order ID and user ID, but also character variables like descriptive product names and department names, and a logical variable `reordered` stating whether the order was placed first time or not.  
+    
+  The `instacart` dataset contains `r dim(instacart)[1]` observations and `r dim(instacart)[2]` variables, storing information related to orders placed on the instacart app. The dataset not only includes numeric variables, such as order ID and user ID, but also character variables like descriptive product names and department names, and a logical variable `reordered` stating whether the order was placed first time or not.  
   
-Taking `order_id` =1 placed by `user_id` = 112108 as an example, this specific order was consist of 8 items with their `product_id`, `product_name` and the order in which each item was added to the cart (`add_to_cart_order`) stated. If `reordered` =1, it means that the particular item was not the first time that customer purchased.  `order_number` refers to the sequence number of this order that the user placed. In this order, the user purchased four of everything. `order_dow` = 4 and `order_hour_of_day` =12 means this order was placed on a Thursday on 12pm. It had been 30 days (`days_since_prior_order` = 30) since this user placed his/her last order on instacart. Information related to the location of each product in the supermarket is specified in `aisle_id`, `aisle`, `department_id` and `department`.
+  Taking `order_id` =1 placed by `user_id` = 112108 as an example, this specific order was consist of 8 items with their `product_id`, `product_name` and the order in which each item was added to the cart (`add_to_cart_order`) stated. If `reordered` =1, it means that the particular item was not the first time that customer purchased.  `order_number` refers to the sequence number of this order that the user placed. In this order, the user purchased four of everything. `order_dow` = 4 and `order_hour_of_day` =12 means this order was placed on a Thursday on 12pm. It had been 30 days (`days_since_prior_order` = 30) since this user placed his/her last order on instacart. Information related to the location of each product in the supermarket is specified in `aisle_id`, `aisle`, `department_id` and `department`.
 
 
 ```{r distinct aisles and their frequency}
@@ -118,9 +129,10 @@ instacart %>%
   summarize(n = n()) %>% 
   arrange(desc(n))
 ```
-- Fresh fruits and vegetables are the two aisles from which most items are ordered. The frequency of fresh fruits/vegetables appeared in this dataset almost double the frequency of the third most popular aisle, packaged vegetables fruits. 
+  
+  Fresh fruits and vegetables are the two aisles from which most items are ordered. The frequency of fresh fruits/vegetables appeared in this dataset almost double the frequency of the third most popular aisle, packaged vegetables fruits. 
 
-```{r plotting n. of items in each aisle}
+```{r plotting n. of items in each aisle, fig.width = 6, fig.height = 4}
 # create a relevant dataframe for further plotting
 aisle_freq = 
 instacart %>% 
@@ -137,7 +149,10 @@ plot_aisle = function (lower_lim, upper_lim){
   scale_y_continuous(name = "Number of items ordered") +
   scale_x_discrete(name = "Asile" ) +
   coord_cartesian(ylim = c(lower_lim*0.95, upper_lim*1.05)) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  labs(title = paste("Aisles with more than",lower_lim, "\nand less than", upper_lim, "items ordered")) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.title = element_text(size = 10,face = "bold"),
+        plot.margin = margin(0, 1.5, 0, 1, "cm"))
 }
 
 aisle_p1 = plot_aisle (0, 1000)
@@ -188,19 +203,22 @@ instacart %>%
   knitr::kable(caption = "the mean hour of the day to order Pink Lady Apples and Coffee Ice Cream")
   
 ```
+
+
 Generally, Pink Lady Apples and Coffee Ice Cream are ordered in early afternoon, in a window between 12pm to 3 pm. The difference in the hours is subtle with respect to which day of the week it is. 
 
 #Problem 3
 
-```{r load ny_noaa data}
+```{r load ny_noaa data, include = FALSE}
 data(ny_noaa, package = "p8105.datasets")
 
 ```
-The `ny_noaa` dataset contains `r dim(ny_noaa)[1]` records and `r dim(ny_noaa)[2]` variables relevant to national-wise daily weather data. The records are reported from `r nrow(distinct(ny_noaa,id))` distinct stations, from `r range(ny_noaa$date)[1]` to `r range(ny_noaa$date)[2]`. Precipitation (in tenths of mm), snowfall (in mm), snow depth (in mm) and maximun / minimum temperature (in tenths of degree C) are the variables included in this dataset.   
   
-Out of the total `r dim(ny_noaa)[1]` records, there are `r round(sum(is.na(ny_noaa$tmax)) / nrow(ny_noaa)*100)` % missing values in the variable `tmax` and `tmin`; `r round(sum(is.na(ny_noaa$snow)) / nrow(ny_noaa)*100)` in `snow`; `r round(sum(is.na(ny_noaa$snwd)) / nrow(ny_noaa)*100)` in `snwd`.   
+  The `ny_noaa` dataset contains `r dim(ny_noaa)[1]` records and `r dim(ny_noaa)[2]` variables relevant to national-wise daily weather data. The records are reported from `r nrow(distinct(ny_noaa,id))` distinct stations, from `r range(ny_noaa$date)[1]` to `r range(ny_noaa$date)[2]`. Precipitation (in tenths of mm), snowfall (in mm), snow depth (in mm) and maximun / minimum temperature (in tenths of degree C) are the variables included in this dataset.   
   
-  *The relatively large proportion of missing values may reduce the power of statistics generated based on this dataset. Limited number of observations on tmax/tmin during earlier years, due to the large quantity of their missing values, may render the available samples being less representative of the overall weather pattern. *
+  Out of the total `r dim(ny_noaa)[1]` records, there are `r round(sum(is.na(ny_noaa$tmax_dC)) / nrow(ny_noaa)*100)` % missing values in the variable `tmax_dC` and `tmin_dC`; `r round(sum(is.na(ny_noaa$snow)) / nrow(ny_noaa)*100)`% in `snow_mm`; `r round(sum(is.na(ny_noaa$snwd)) / nrow(ny_noaa)*100)`% in `snwd_mm`.   
+  
+  The relatively large proportion of missing values may reduce reliability of statistics generated based on this dataset. Limited number of observations on tmax/tmin during earlier years, due to the large quantity of their missing values, may render the samples in this dataset being less representative of the overall weather pattern in NY. 
   
 ```{r cleaning of ny_noaa}
 #separate the date
@@ -219,31 +237,32 @@ ny_noaa$day = as.numeric(unclass(ny_noaa$day))
 #mutate the value of varialbes so that they are in agreement with reasonable units
 ny_noaa =
 ny_noaa %>% 
-  mutate(tmax = tmax *0.1, tmin = tmin*0.1, prcp = prcp*0.1) 
+  mutate(tmax = tmax *0.1, tmin = tmin*0.1, prcp = prcp*0.1) %>% 
+  rename (prcp_mm = prcp, snow_mm = snow, snwd_mm = snwd, tmax_dC = tmax, tmin_dC = tmin)
 
 #get the mode of snallfall values
 getmode <- function(input) {
    uniqv <- unique(input)
    uniqv[which.max(tabulate(match(input, uniqv)))]
 }
-getmode(ny_noaa$snow)
+getmode(ny_noaa$snow_mm)
 ```
 
-- The most commmonly observed value of snowfall is 0 among all New York state weather stations from January 1, 1981 through December 31, 2010. The reason is probably that the snowing season in New York state only takes place for a relatively short duration of time throughout a year.
+  The most commmonly observed value of snowfall is 0mm among all New York state weather stations from January 1, 1981 through December 31, 2010. The reason is probably that the snowing season in New York state only takes place for a relatively short duration of time throughout a year.
 
 ```{r plotting avg temp in JAN/JUL}
 # first working on the avg temp in JAN
 avg_temp_jan = 
 ny_noaa %>% 
-  na.omit(cols= c("tmax", "tmin")) %>% 
+  na.omit(cols= c("tmax_dC", "tmin_dC")) %>% 
   filter(month == 1) %>% 
   group_by(id, year) %>% 
-  summarize(avg_temp = 0.5*mean(tmax) + 0.5*mean(tmin)) 
+  summarize(avg_temp = mean(tmax_dC)) 
 
 p_JAN = 
 ggplot (avg_temp_jan, aes(x = year, y = avg_temp, color = id)) +
   geom_line() +
-  labs (title = "Average Temperature (degrees C) in January each year of each station, 1980-2010",
+  labs (title = "Average Temperature (degrees C) in January \neach year of each station, 1980-2010",
         x = "Year",
         y = "Temperature (degrees C)") +
   theme(legend.position="none")
@@ -251,15 +270,15 @@ ggplot (avg_temp_jan, aes(x = year, y = avg_temp, color = id)) +
 # then working on the avg temp in JUL
 avg_temp_jul = 
 ny_noaa %>% 
-  na.omit(cols= c("tmax", "tmin")) %>% 
+  na.omit(cols= c("tmax_dC", "tmin_dC")) %>% 
   filter(month == 7) %>% 
   group_by(id, year) %>% 
-  summarize(avg_temp = 0.5*mean(tmax) + 0.5*mean(tmin)) 
+  summarize(avg_temp = mean(tmax_dC) ) 
 
 p_JUL = 
 ggplot (avg_temp_jul, aes(x = year, y = avg_temp, color = id)) +
   geom_line() +
-  labs (title = "Average Temperature (degrees C) in July each year of each station, 1980-2010",
+  labs (title = "Average Temperature (degrees C) in July \neach year of each station, 1980-2010",
         x = "Year",
         y = "Temperature (degrees C)") +
   theme(legend.position="none")
@@ -271,24 +290,35 @@ filter (avg_temp_jan, avg_temp == min(avg_temp_jan$avg_temp))
 filter (avg_temp_jul, avg_temp == min(avg_temp_jul$avg_temp))
 ```
 
-In general, the average temperature in January/July in each station of NY state follows relatively similar pattern across 1980 to 2010. However, there are two noticable outliers: the average temperature of -20.2 degrees C in January 1996 and the one of 14.0 degrees C in July 2007. 
+  In general, the average temperature in January/July in each station of NY state follows relatively similar pattern across 1980 to 2010. However, there are two noticable outliers: the average temperature of -20.2 degrees C in January 1996 and the one of 14.0 degrees C in July 2007. 
 
 ```{r plotting tmax vs tmin}
+tmax_tmin_plot = 
 ny_noaa %>% 
-  na.omit(cols= c("tmax", "tmin")) %>% 
-  ggplot(aes(x = tmin, y = tmax)) +
+  na.omit(cols= c("tmax_dC", "tmin_dC")) %>% 
+  ggplot(aes(x = tmin_dC, y = tmax_dC)) +
+  labs(title = "Max Temperature VS Min Temperature \nfor All NY NOAA Data",
+       x = "Min Temperature (degrees C)",
+       y = "Max Temperature (degrees C)") +
   geom_bin2d()
 ```
 
-```{r distribution of snowfall values}
+```{r distribution of snowfall values, fig.width = 6, fig.height = 6}
+snowfall_plot = 
 ny_noaa  %>% 
-  na.omit(cols = "snow") %>% 
-  filter(snow > 0 & snow <100) %>% 
-  ggplot(aes(x = as.character(year), y = snow)) +
-  geom_boxplot() +
-  labs (title = "Snowfall distribution in NY state from 1980 to 2010",
-        x = "Year",
-        y = "Snowfall (mm)") +
-  theme(axis.text.x = element_text(angle = 80, hjust = 1))
+  na.omit(cols = "snow_mm") %>% 
+  filter(snow_mm > 0 & snow_mm <100) %>% 
+  ggplot(aes(x = snow_mm, y = as.character(year))) +
+  geom_density_ridges(adjust = 3) +
+  labs (title = "Snowfall Distribution in NY State \nfrom 1980 to 2010",
+        x = "Snowfall (mm)",
+        y = "Year") 
+
+# make a two panel plot
+tmax_tmin_plot / snowfall_plot
 ```
+
+  As shown in the top panel showing a heatmap of maximum temperature versus minimum temperature for the entire `ny_noaa` dataset, the relationship between max temperature and min temperature seems to be positively linear-dependent. In other words, the max temperature increases as the min temperature increases. In addition, the most observed max & min temperature records are colored in light blue while darker colors indicate less commonly being being observed. 
+  
+  The bottom panel is a density plot showing the distribution of snowfall (ranged from 0 to 100 mm) in NY from 1981 to 2010. Across these 30 years, the distribution looks very much similar, with most records between 0 to 40 mm and two smaller peaks at about 45 mm and 75 mm respectively. 
 
