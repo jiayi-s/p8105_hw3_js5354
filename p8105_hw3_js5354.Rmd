@@ -183,6 +183,7 @@ instacart %>%
   
 ```
 
+
 The most popular item in aisles "baking ingredients", "dog food care", "packaged vegetables fruits" are "Light Brown Sugar", "Snack Sticks Chicken & Rice Recipe Dog Treats", and "Organic Baby Spinach" respectively. A total of 9784 portions of "Organic Baby Spinach" were purchased in this data. 
 
 
@@ -200,12 +201,12 @@ instacart %>%
                             "5" = "Friday",
                             "6" = "Saturday")) %>% 
   mutate(mean_hof = paste(floor(mean_hof), round((mean_hof-floor(mean_hof))*60), sep=":")) %>% 
-  knitr::kable(caption = "the mean hour of the day to order Pink Lady Apples and Coffee Ice Cream")
+  knitr::kable()
   
 ```
 
 
-Generally, Pink Lady Apples and Coffee Ice Cream are ordered in early afternoon, in a window between 12pm to 3 pm. The difference in the hours is subtle with respect to which day of the week it is. 
+  Generally, Pink Lady Apples and Coffee Ice Cream are ordered in early afternoon, in a window between 12pm to 3 pm. The difference in the hours is subtle with respect to which day of the week it is. 
 
 #Problem 3
 
