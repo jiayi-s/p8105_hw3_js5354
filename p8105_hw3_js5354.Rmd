@@ -304,7 +304,7 @@ ny_noaa %>%
   geom_bin2d()
 ```
 
-```{r distribution of snowfall values, fig.width = 6, fig.height = 6}
+```{r distribution of snowfall values, fig.width = 6, fig.height = 9}
 snowfall_plot = 
 ny_noaa  %>% 
   na.omit(cols = "snow_mm") %>% 
