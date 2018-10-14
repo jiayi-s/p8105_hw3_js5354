@@ -1,7 +1,7 @@
 ---
-title: "P8105 HW3"
+title: "P8105 Homework 3"
 author: Jiayi Shen
-date: 10/06/2018
+date: 10/14/2018
 output: github_document
 ---
 
@@ -26,6 +26,7 @@ data(brfss_smart2010, package = "p8105.datasets")
 ```
 
 ```{r clean up BRFSS}
+# tidying up BRFSS data
 brfss_smart2010 = brfss_smart2010 %>% 
   janitor::clean_names() %>% 
   filter(topic == "Overall Health") %>% 
@@ -44,9 +45,9 @@ brfss_smart2010 %>%
   filter(n == 7)
 ```
 
-  In 2002, CT, FL and NC were observed at 7 locations.  
+  In 2002, Connecticut, Florida and North Carolina were observed at 7 locations.  
   
-```{r spaghetti plot, fig.width = 6, fig.height = 8}
+```{r spaghetti plot, fig.width = 6, fig.height = 8, warning = FALSE}
 # create a relevant dataframe for spaghetti plot
 spaghetti_df = 
 brfss_smart2010 %>% 
@@ -60,14 +61,14 @@ ggplot(spaghetti_df, aes(x = year, y = n, color = locationabbr)) +
   geom_point() +
   labs(x = "Year", 
        y = "Num. of locations",
-       title = "The number of locations in each state\nfrom 2002 to 2010") +
+       title = "Number of locations in each state from 2002 to 2010") +
    theme(legend.position = "bottom", 
          legend.text = element_text(size = 9),
          axis.title=element_text(size = 9,face = "bold")) +
   guides(colour = guide_legend(nrow = 7))
 ```
     
-  This line plot demonstrates the number of observations each year in each state. The time frame ranges from 2002 to 2010. One line represents the trend in he number of observations in one state. Different states are colored differently.  
+  The line plot above shows changes in the number of locations of each state in the BRFSS data from 2002 to 2010. Lines are colored by which state they represent. It is noticable that FL had more than 40 locations submitting their responses in 2007 and 2010, which is about twice the number of locations in the other states in these two years. 
   
 ```{r table of excellent proportion in NY}
 
@@ -87,11 +88,13 @@ brfss_smart2010 %>%
   
 
 ```{r state level average of each response, fig.width = 6, fig.height = 8}
+# create a relevant dataframe for plotting
 brfss_state_avg = 
 brfss_smart2010 %>% 
   group_by(year, locationabbr, response) %>% 
   summarize(avg_prop = mean(data_value))
 
+# plot brfss_state_avg
 ggplot(brfss_state_avg, aes(x = year, y = avg_prop, color = locationabbr))+
   geom_line()+
   labs(x = "Year",
@@ -110,13 +113,15 @@ ggplot(brfss_state_avg, aes(x = year, y = avg_prop, color = locationabbr))+
   
 
 #Problem 2
-```{r load instacart data, include = FALSE}
-data(instacart, package = "p8105.datasets")
+```{r load instacart data}
+# load instacart data and have a quick look 
+data(instacart, package = "p8105.datasets") 
+head(instacart)
 ```
     
   The `instacart` dataset contains `r dim(instacart)[1]` observations and `r dim(instacart)[2]` variables, storing information related to orders placed on the instacart app. The dataset not only includes numeric variables, such as order ID and user ID, but also character variables like descriptive product names and department names, and a logical variable `reordered` stating whether the order was placed first time or not.  
   
-  Taking `order_id` =1 placed by `user_id` = 112108 as an example, this specific order was consist of 8 items with their `product_id`, `product_name` and the order in which each item was added to the cart (`add_to_cart_order`) stated. If `reordered` =1, it means that the particular item was not the first time that customer purchased.  `order_number` refers to the sequence number of this order that the user placed. In this order, the user purchased four of everything. `order_dow` = 4 and `order_hour_of_day` =12 means this order was placed on a Thursday on 12pm. It had been 30 days (`days_since_prior_order` = 30) since this user placed his/her last order on instacart. Information related to the location of each product in the supermarket is specified in `aisle_id`, `aisle`, `department_id` and `department`.
+  Taking `order_id` =1 placed by `user_id` = 112108 as an example, this specific order was consist of 8 items with their `product_id`, `product_name` and the order in which each item was added to the cart (`add_to_cart_order`) stated. If `reordered` =1, it means that the particular item was not the first time that customer purchased.  `order_number` refers to the sequence number of this order that the user placed. In this case, the user purchased four of everything. `order_dow` = 4 and `order_hour_of_day` =12 means this order was placed on a Thursday on 12pm. It had been 30 days (`days_since_prior_order` = 30) since this user placed his/her last order on instacart. Information related to the location of each product in the supermarket is specified in `aisle_id`, `aisle`, `department_id` and `department`.
 
 
 ```{r distinct aisles and their frequency}
@@ -130,7 +135,7 @@ instacart %>%
   arrange(desc(n))
 ```
   
-  Fresh fruits and vegetables are the two aisles from which most items are ordered. The frequency of fresh fruits/vegetables appeared in this dataset almost double the frequency of the third most popular aisle, packaged vegetables fruits. 
+  There are in total 134 aisles. Among these, fresh fruits and fresh vegetables are the two aisles from which most items are ordered. The frequency of fresh fruits/vegetables appeared in this dataset almost double the frequency of the third most popular aisle, packaged vegetables fruits. 
 
 ```{r plotting n. of items in each aisle, fig.width = 6, fig.height = 4}
 # create a relevant dataframe for further plotting
@@ -140,7 +145,7 @@ instacart %>%
   summarize(n = n()) %>% 
   arrange(desc(n))
 
-# create a function to plot aisles with item number within specific interval.
+# create a function to plot aisles with item number within a specific interval.
 plot_aisle = function (lower_lim, upper_lim){
 
   ggplot(filter(aisle_freq, n >= lower_lim & n < upper_lim), aes(x = reorder(aisle, -n), y = n)) +
@@ -161,13 +166,16 @@ aisle_p3 = plot_aisle (2000, 6000)
 aisle_p4 = plot_aisle (6000, 13000)
 aisle_p5 = plot_aisle (13000, 151000)
 
-aisle_p1  
-aisle_p2  
+aisle_p5  
+aisle_p4  
 aisle_p3  
-aisle_p4 
-aisle_p5 
+aisle_p2 
+aisle_p1 
 
 ```
+
+  The 5 bar charts above demonstrate the number of items ordered in the 134 aisles in `instacart` dataset. Bars are ordered descendingly from left to right in every subplot. The range of items ordered across different asiles is very broad, from less than 300 to over 150,000. 
+
 
 ```{r table: the most popular item in 3 aisles}
 # make a table showing the most popular item in aisles "baking ingredients", "dog food care", "packaged vegetables fruits"
@@ -184,10 +192,11 @@ instacart %>%
 ```
 
 
-The most popular item in aisles "baking ingredients", "dog food care", "packaged vegetables fruits" are "Light Brown Sugar", "Snack Sticks Chicken & Rice Recipe Dog Treats", and "Organic Baby Spinach" respectively. A total of 9784 portions of "Organic Baby Spinach" were purchased in this data. 
+  The most popular item in aisles "baking ingredients", "dog food care", "packaged vegetables fruits" are "Light Brown Sugar", "Snack Sticks Chicken & Rice Recipe Dog Treats", and "Organic Baby Spinach" respectively. A total of 9784 portions of "Organic Baby Spinach" were purchased in this data. 
 
 
 ```{r table: the mean hour of the day}
+# filter product_name and then make adjustments to date/time variables accordingly.
 instacart %>% 
   filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>% 
   group_by(order_dow) %>% 
@@ -210,8 +219,9 @@ instacart %>%
 
 #Problem 3
 
-```{r load ny_noaa data, include = FALSE}
+```{r load ny_noaa data}
 data(ny_noaa, package = "p8105.datasets")
+head(ny_noaa)
 
 ```
   
@@ -293,7 +303,8 @@ filter (avg_temp_jul, avg_temp == min(avg_temp_jul$avg_temp))
 
   In general, the average temperature in January/July in each station of NY state follows relatively similar pattern across 1980 to 2010. However, there are two noticable outliers: the average temperature of -20.2 degrees C in January 1996 and the one of 14.0 degrees C in July 2007. 
 
-```{r plotting tmax vs tmin}
+```{r plotting tmax vs tmin, warning = FALSE}
+# plotting tmax vs tmin using geom_bin2d
 tmax_tmin_plot = 
 ny_noaa %>% 
   na.omit(cols= c("tmax_dC", "tmin_dC")) %>% 
@@ -305,6 +316,7 @@ ny_noaa %>%
 ```
 
 ```{r distribution of snowfall values, fig.width = 6, fig.height = 9}
+# plott distribution of snowfall values with geom_density_ridges
 snowfall_plot = 
 ny_noaa  %>% 
   na.omit(cols = "snow_mm") %>% 
