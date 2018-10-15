@@ -197,6 +197,7 @@ instacart %>%
 
 ```{r table: the mean hour of the day}
 # filter product_name and then make adjustments to date/time variables accordingly.
+instacart_dow = 
 instacart %>% 
   filter(product_name %in% c("Pink Lady Apples", "Coffee Ice Cream")) %>% 
   group_by(order_dow) %>% 
@@ -209,8 +210,13 @@ instacart %>%
                             "4" = "Thursday",
                             "5" = "Friday",
                             "6" = "Saturday")) %>% 
-  mutate(mean_hof = paste(floor(mean_hof), round((mean_hof-floor(mean_hof))*60), sep=":")) %>% 
-  knitr::kable()
+  mutate(mean_hof = paste(floor(mean_hof), round((mean_hof-floor(mean_hof))*60), sep=":")) 
+
+# create a 2*7 tibble
+dow_list = instacart_dow$order_dow
+hof_list = instacart_dow$mean_hof
+as_tibble(rbind(dow_list, hof_list))
+
   
 ```
 
