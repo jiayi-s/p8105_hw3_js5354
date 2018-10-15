@@ -197,31 +197,20 @@ instacart %>%
 
 ```{r table: the mean hour of the day}
 # filter product_name and then make adjustments to date/time variables accordingly.
-pinklady = 
 instacart %>% 
-  filter(product_name == "Pink Lady Apples") %>% 
-  group_by(order_dow) %>% 
+  filter(product_name %in%  c("Pink Lady Apples","Coffee Ice Cream")) %>% 
+  group_by(product_name, order_dow) %>% 
   summarize(mean_hof = mean(order_hour_of_day)) %>% 
-  mutate(mean_hof = paste(floor(mean_hof), round((mean_hof-floor(mean_hof))*60), sep=":")) 
-pinklady_hof = pinklady$mean_hof
-
-coffee_icecream = 
-instacart %>% 
-  filter(product_name == "Coffee Ice Cream") %>% 
-  group_by(order_dow) %>% 
-  summarize(mean_hof = mean(order_hour_of_day)) %>% 
-  mutate(mean_hof = paste(floor(mean_hof), round((mean_hof-floor(mean_hof))*60), sep=":")) 
-coffee_icecream_hof = coffee_icecream$mean_hof
-
-# create a 2*7 tibble
-
-as_data_frame(rbind(pinklady_hof, coffee_icecream$mean_hof)) %>% 
-  knitr::kable(col.names = c("Sun", "Mon", "Tue","Wed", "Thu", "Fri", "Sat"))
+  mutate(mean_hof = paste(floor(mean_hof), round((mean_hof-floor(mean_hof))*60), sep=":")) %>% 
+  spread(key = order_dow, value = mean_hof) %>% 
+  rename('Sun' = '0', 'Mon' = '1', 'Tue' = '2', 
+         'Wed' = '3', 'Thu' = '4', 'Fri' = '5', 'Sat' = '6') %>% 
+  knitr::kable() 
 
 ```
 
 
-  The table above lists the average hour of day when pink lady apples and coffee ice cream are ordered, based on the `instacart` data. The first row is associated with pink lady apples and the second row is related to coffee ice cream. In general, the two items are mainly ordered in noon and early afternoon, in a window between 11:00 to 14:30. Differences in the mean hour of day among different weekdays are subtle. 
+  The table above lists the average hour of day when pink lady apples and coffee ice cream are ordered, based on the `instacart` data. In general, the two items are mainly ordered in noon and early afternoon, in a window between 11:00 to 14:30. Differences in the mean hour of day among different weekdays are subtle. 
 
 #Problem 3
 
