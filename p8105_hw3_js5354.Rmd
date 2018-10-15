@@ -214,9 +214,10 @@ instacart %>%
 coffee_icecream_hof = coffee_icecream$mean_hof
 
 # create a 2*7 tibble
-as_tibble(rbind(pinklady_hof, coffee_icecream$mean_hof)) %>% 
-  rename (Sun = V1, Mon = V2, Tue = V3, Wed = V4, Thu = V5, Fri = V6, Sat = V7) 
-  
+
+as_data_frame(rbind(pinklady_hof, coffee_icecream$mean_hof)) %>% 
+  knitr::kable(col.names = c("Sun", "Mon", "Tue","Wed", "Thu", "Fri", "Sat"))
+
 ```
 
 
